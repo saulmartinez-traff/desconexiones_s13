@@ -1,0 +1,15 @@
+"""
+Registers App Configuration
+"""
+
+from django.apps import AppConfig
+
+
+class RegistersConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'apps.registers'
+    verbose_name = 'Registers & Logs'
+
+    def ready(self):
+        """Importar signals cuando la app esté lista"""
+        pass

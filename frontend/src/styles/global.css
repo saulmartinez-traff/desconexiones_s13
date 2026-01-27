@@ -1,0 +1,104 @@
+/**
+ * Estilos globales
+ */
+
+import { colors, fonts, fontSizes, spacing } from './theme.js';
+
+export const globalStyles = `
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    font-family: ${fonts.bodyFont};
+    background-color: ${colors.lightGray};
+    color: ${colors.black};
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: ${fonts.titleFont};
+    color: ${colors.darkBlue};
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: ${spacing.md};
+  }
+
+  h1 { font-size: ${fontSizes['4xl']}; }
+  h2 { font-size: ${fontSizes['3xl']}; }
+  h3 { font-size: ${fontSizes['2xl']}; }
+  h4 { font-size: ${fontSizes.xl}; }
+  h5 { font-size: ${fontSizes.lg}; }
+  h6 { font-size: ${fontSizes.base}; }
+
+  p {
+    font-size: ${fontSizes.base};
+    margin-bottom: ${spacing.md};
+  }
+
+  a {
+    color: ${colors.mediumBlue};
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  a:hover {
+    color: ${colors.deepTeal};
+  }
+
+  button, input, select, textarea {
+    font-family: ${fonts.bodyFont};
+    font-size: ${fontSizes.base};
+  }
+
+  input, select, textarea {
+    padding: ${spacing.sm} ${spacing.md};
+    border: 1px solid ${colors.gray200};
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: ${colors.mediumBlue};
+    box-shadow: 0 0 0 3px rgba(50, 116, 186, 0.1);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: ${spacing.lg};
+  }
+
+  th {
+    background-color: ${colors.darkBlue};
+    color: ${colors.white};
+    padding: ${spacing.md};
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td {
+    padding: ${spacing.md};
+    border-bottom: 1px solid ${colors.gray200};
+  }
+
+  tr:hover {
+    background-color: ${colors.skyBlue};
+  }
+`;
+
+// Inyectar estilos globales en el documento
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.innerHTML = globalStyles;
+  document.head.appendChild(style);
+}

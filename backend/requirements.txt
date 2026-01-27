@@ -1,0 +1,46 @@
+# Django Core
+Django
+djangorestframework
+django-filter
+django-cors-headers
+
+# Database
+# mysqlclient
+psycopg2-binary
+
+# Environment Variables
+python-dotenv
+
+# Validation & Serialization
+djangorestframework-simplejwt
+python-jose
+
+# Data Processing
+pandas
+numpy
+shapely
+
+# API Requests
+requests
+httpx
+
+# Logging & Monitoring
+python-json-logger
+
+# Testing
+pytest
+pytest-django
+factory-boy
+
+# Code Quality
+black
+flake8
+isort
+pylint
+
+# WSGI Server (Production)
+gunicorn
+
+# Development
+ipython
+django-extensions
