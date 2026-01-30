@@ -1,9 +1,6 @@
-/**
- * Concentrado Page - Vista de tabla concentrada con filtros
- */
-
+// frontend/src/pages/Concentrado.jsx
 import React, { useState } from 'react';
-import { useFetchVehicles } from '../hooks/useFetchVehicles.js';
+import { useFetchRegisters } from '../hooks/useFetchRegisters.js'; // Hook correcto
 import { useFilters } from '../hooks/useFilters.js';
 import FilterPanel from '../molecules/FilterPanel.jsx';
 import SearchBar from '../molecules/SearchBar.jsx';
@@ -13,7 +10,11 @@ import { colors, spacing } from '../styles/theme.js';
 const Concentrado = () => {
   const [page, setPage] = useState(1);
   const { filters, updateFilter, clearFilters } = useFilters({});
-  const { vehicles, loading, error, pagination } = useFetchVehicles(page, filters);
+  
+  // === CORRECCIÓN AQUÍ ===
+  // 1. Usamos 'registers' (plural) porque así se llama en tu hook.
+  // 2. Agregamos 'error' para evitar que la página truene al pasarlo abajo.
+  const { registers, loading, error, pagination } = useFetchRegisters(page, filters);
 
   const mockGroups = [
     { id: 1, group_description: 'BAJAS COPPEL' },
@@ -21,7 +22,19 @@ const Concentrado = () => {
     { id: 3, group_description: 'GRUPO FONDO' },
   ];
 
-  const columns = ['VIN', 'TIPO', 'ESTATUS FINAL', 'RESPONSABLE', 'COMENTARIO'];
+  const columns = [
+    { header: 'FECHA REPORTE', accessor: 'report_date' },
+    { header: 'VIN', accessor: 'vin' },
+    { header: 'CLIENTE', accessor: 'cliente' },
+    { header: 'DISTRIBUIDOR', accessor: 'distribuidor' },
+    { header: 'CONTRATO', accessor: 'contrato' },
+    { header: 'ÚLTIMA CONEXIÓN', accessor: 'last_connection' },
+    { header: 'PROBLEMA', accessor: 'problem' },
+    { header: 'TIPO', accessor: 'type' },
+    { header: 'ESTATUS FINAL', accessor: 'final_status' },
+    { header: 'RESPONSABLE', accessor: 'responsible' },
+    { header: 'COMENTARIO', accessor: 'comment' },
+  ];
 
   return (
     <div
@@ -31,16 +44,13 @@ const Concentrado = () => {
         minHeight: '100vh',
       }}
     >
-      {/* Encabezado */}
       <h1 style={{ marginBottom: spacing.lg }}>Vista Concentrado</h1>
 
-      {/* Barra de búsqueda */}
       <SearchBar
         onSearch={(value) => updateFilter('search', value)}
         placeholder="Buscar por VIN, grupo, etc..."
       />
 
-      {/* Panel de filtros */}
       <FilterPanel
         groups={mockGroups}
         onFilterChange={(newFilters) => {
@@ -52,20 +62,18 @@ const Concentrado = () => {
         onClearFilters={clearFilters}
       />
 
-      {/* Tabla de vehículos */}
+      {/* === CORRECCIÓN AQUÍ === */}
       <VehicleTable
-        data={vehicles}
+        data={registers}  // <--- CAMBIO: Usamos la variable plural
         columns={columns}
         editable={true}
         loading={loading}
-        error={error}
+        error={error}     // <--- CAMBIO: Ahora sí existe esta variable
         onSave={(data) => {
           console.log('Guardar:', data);
-          // TODO: Implementar guardar cambios
         }}
       />
 
-      {/* Paginación */}
       <div
         style={{
           display: 'flex',

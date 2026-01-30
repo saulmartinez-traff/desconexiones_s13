@@ -1,4 +1,4 @@
-/**
+/** frontend/src/services/telemetryAPI.js
  * Telemetry API - Endpoints de telemetría y vehículos
  */
 
@@ -9,7 +9,7 @@ const telemetryAPI = {
    * Obtener listado de vehículos con paginación
    */
   getVehicles: (page = 1, filters = {}) => {
-    return apiClient.get('/vehicles/', {
+    return apiClient.get('/vehicles/data/', {
       params: {
         page,
         ...filters,
@@ -21,14 +21,14 @@ const telemetryAPI = {
    * Obtener detalle de un vehículo
    */
   getVehicle: (vehicleId) => {
-    return apiClient.get(`/vehicles/${vehicleId}/`);
+    return apiClient.get(`/vehicles/data/${vehicleId}/`);
   },
 
   /**
    * Actualizar vehículo
    */
   updateVehicle: (vehicleId, data) => {
-    return apiClient.patch(`/vehicles/${vehicleId}/`, data);
+    return apiClient.patch(`/vehicles/data/${vehicleId}/`, data);
   },
 
   /**

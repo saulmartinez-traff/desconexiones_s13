@@ -1,3 +1,5 @@
+# backend/apps/organization/models.py
+
 """
 Organization Models - Estructura organizacional del sistema
 Tablas: Distribuidores, Clients, Groups, Users
@@ -5,7 +7,6 @@ Tablas: Distribuidores, Clients, Groups, Users
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import EmailValidator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,28 +20,38 @@ class User(AbstractUser):
     Extended User Model para incluir campos personalizados.
     Campos simplificados: user_name, user_pass, user_email
     """
+    ADMIN = 'ADMIN'
+    PM = 'PM'
+    DIRECTOR = 'DIRECTOR'
+    DISTRIBUIDOR = 'DISTRIBUIDOR'
+    \
+    ROLE_CHOICES = [
+        (ADMIN, 'Administrator'),
+        (PM, 'Project Manager'),
+        (DIRECTOR, 'Director cliente'),
+        (DISTRIBUIDOR, 'Distribuidor'),
+    ]
     
-    user_name = models.CharField(
-        max_length=150,
-        unique=True,
-        help_text='Nombre de usuario único'
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default=DISTRIBUIDOR,
     )
-    user_email = models.EmailField(
-        validators=[EmailValidator()],
-        unique=True,
-        help_text='Email del usuario'
+    
+    distribuidor = models.ForeignKey(
+        'Distribuidor',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text='Distribuidor asociado al usuario'
     )
     
     class Meta:
         verbose_name = 'Usuario'
         verbose_name_plural = 'Usuarios'
-        indexes = [
-            models.Index(fields=['user_name']),
-            models.Index(fields=['user_email']),
-        ]
     
     def __str__(self):
-        return f"{self.user_name} ({self.user_email})"
+        return f"{self.username} ({self.email})"
 
 
 # ============================================================================

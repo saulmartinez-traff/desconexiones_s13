@@ -1,104 +1,51 @@
-/**
- * Estilos globales
- */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-import { colors, fonts, fontSizes, spacing } from './theme.js';
-
-export const globalStyles = `
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  html {
-    font-size: 16px;
-  }
-
+/* @layer base permite inyectar estilos a etiquetas HTML puras 
+   usando las clases de Tailwind. Esto reemplaza tu lógica de JS.
+*/
+@layer base {
   body {
-    font-family: ${fonts.bodyFont};
-    background-color: ${colors.lightGray};
-    color: ${colors.black};
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-gray-100 text-gray-900 antialiased;
+    /* font-family lo maneja Tailwind por defecto, o lo configuramos luego */
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: ${fonts.titleFont};
-    color: ${colors.darkBlue};
-    font-weight: 600;
-    line-height: 1.2;
-    margin-bottom: ${spacing.md};
+    @apply font-bold text-blue-900 mb-4 leading-tight;
   }
 
-  h1 { font-size: ${fontSizes['4xl']}; }
-  h2 { font-size: ${fontSizes['3xl']}; }
-  h3 { font-size: ${fontSizes['2xl']}; }
-  h4 { font-size: ${fontSizes.xl}; }
-  h5 { font-size: ${fontSizes.lg}; }
-  h6 { font-size: ${fontSizes.base}; }
-
-  p {
-    font-size: ${fontSizes.base};
-    margin-bottom: ${spacing.md};
-  }
-
+  h1 { @apply text-4xl; }
+  h2 { @apply text-3xl; }
+  h3 { @apply text-2xl; }
+  
   a {
-    color: ${colors.mediumBlue};
-    text-decoration: none;
-    transition: color 0.3s ease;
+    @apply text-blue-600 no-underline transition-colors duration-300;
   }
 
   a:hover {
-    color: ${colors.deepTeal};
+    @apply text-teal-600;
   }
 
-  button, input, select, textarea {
-    font-family: ${fonts.bodyFont};
-    font-size: ${fontSizes.base};
-  }
-
+  /* Estilos para formularios básicos */
   input, select, textarea {
-    padding: ${spacing.sm} ${spacing.md};
-    border: 1px solid ${colors.gray200};
-    border-radius: 4px;
-    transition: border-color 0.3s ease;
+    @apply px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all;
   }
 
-  input:focus, select:focus, textarea:focus {
-    outline: none;
-    border-color: ${colors.mediumBlue};
-    box-shadow: 0 0 0 3px rgba(50, 116, 186, 0.1);
-  }
-
+  /* Estilos para tablas (para cuando lleguemos a los reportes) */
   table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: ${spacing.lg};
+    @apply w-full border-collapse mb-6;
   }
 
   th {
-    background-color: ${colors.darkBlue};
-    color: ${colors.white};
-    padding: ${spacing.md};
-    text-align: left;
-    font-weight: 600;
+    @apply bg-blue-900 text-white p-3 text-left font-semibold;
   }
 
   td {
-    padding: ${spacing.md};
-    border-bottom: 1px solid ${colors.gray200};
+    @apply p-3 border-b border-gray-200;
   }
 
   tr:hover {
-    background-color: ${colors.skyBlue};
+    @apply bg-blue-50;
   }
-`;
-
-// Inyectar estilos globales en el documento
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.innerHTML = globalStyles;
-  document.head.appendChild(style);
 }

@@ -288,7 +288,7 @@ LOGGING = {
 # ============================================================================
 # Telemetry API Configuration
 TELEMETRY_API_URL = os.getenv('TELEMETRY_API_URL', '')
-TELEMETRY_API_KEY = os.getenv('TELEMETRY_API_KEY', '')
+# TELEMETRY_API_KEY = os.getenv('TELEMETRY_API_KEY', '')
 
 # VIN Filter (Global Filter)
 VIN_FILTER_PATTERN = 'SZ'

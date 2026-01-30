@@ -1,14 +1,18 @@
+# backed/apps/vehicles/models.py
+
 """
 Vehicles Models - Gestión de vehículos, geocercas y contratos
 Tablas: Geofence, Vehicle, Contrato
 """
 
 from django.db import models
+from django.conf import settings
+from django.utils import timezone
 import logging
 
 logger = logging.getLogger(__name__)
 
-
+    
 # ============================================================================
 # GEOFENCE MODEL
 # ============================================================================
@@ -157,9 +161,28 @@ class Vehicle(models.Model):
         db_index=True
     )
     
+    # Speed
+    speed = models.FloatField(
+        default=0.0,
+        help_text='Última velocidad registrada del vehículo en km/h'
+    )
+    
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Propiedades calculadas
+    @property
+    def connection_status(self):
+        if not self.last_connection:
+            return True
+        return self.last_connection.date() < timezone.now().date()
+    
+    @property
+    def disconnected_type(self):
+        if self.connection_status:
+            return 'Trayecto' if self.speed > 0 else 'Base'
+        return 'Conectado'
     
     class Meta:
         verbose_name = 'Vehículo'

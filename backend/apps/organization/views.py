@@ -1,191 +1,86 @@
+# backend/apps/organization/views.py
+
 """
 Views for Organization App
 Handles User, Distribuidor, Client, and Group endpoints
 """
 
-from rest_framework import viewsets, status, filters
+from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
 from .models import Distribuidor, Client, Group
+# Importamos SOLO lo que sí existe en tu serializers.py
 from .serializers import (
     UserSerializer,
     DistribuidorSerializer,
     ClientSerializer,
-    GroupSerializer,
-    GroupListSerializer
+    GroupSerializer
 )
 
 User = get_user_model()
 
-
 class UserViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for User management
-    - list: Get all users (admins only)
-    - create: Create new user (admins only)
-    - retrieve: Get user details
-    - update: Update user info
-    - partial_update: Partial update
+    Gestión de usuarios.
+    - Admins ven todo.
+    - Los demás solo ven su propio perfil.
     """
-    
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['role', 'is_active']
+    # Quitamos 'is_active' porque no lo estamos usando explícitamente en el admin aún
+    filterset_fields = ['role', 'distribuidor'] 
     search_fields = ['username', 'email', 'first_name', 'last_name']
     
     def get_queryset(self):
-        """Filter users based on permissions"""
+        """
+        Filtra usuarios según permisos.
+        """
         user = self.request.user
         
-        # Admins can see all users
-        if user.role == User.ADMIN:
+        # Si no está autenticado (aunque permission_classes lo evita), retornamos vacío
+        if not user.is_authenticated:
+            return User.objects.none()
+
+        # Si es Admin o Superuser, ve todo
+        if user.is_superuser or getattr(user, 'role', '') == 'ADMIN':
             return User.objects.all()
         
-        # Others can only see themselves
+        # Los mortales solo se ven a sí mismos
         return User.objects.filter(id=user.id)
     
     @action(detail=False, methods=['get'])
     def me(self, request):
-        """Get current user profile"""
+        """Obtener perfil del usuario actual"""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def set_password(self, request, pk=None):
-        """Set/change user password"""
-        user = self.get_object()
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                {'detail': 'Password updated successfully'},
-                status=status.HTTP_200_OK
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DistribuidorViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for Distribuidor management
-    - list: Get all distribuidores
-    - create: Create new distribuidor (admins only)
-    - retrieve: Get distribuidor details
-    - update: Update distribuidor
-    """
-    
     queryset = Distribuidor.objects.all()
     serializer_class = DistribuidorSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['is_active']
-    search_fields = ['name', 'distribuidor_id', 'contact_email']
-    
-    @action(detail=True, methods=['post'])
-    def activate(self, request, pk=None):
-        """Activate a distribuidor"""
-        distribuidor = self.get_object()
-        distribuidor.is_active = True
-        distribuidor.save()
-        serializer = self.get_serializer(distribuidor)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def deactivate(self, request, pk=None):
-        """Deactivate a distribuidor"""
-        distribuidor = self.get_object()
-        distribuidor.is_active = False
-        distribuidor.save()
-        serializer = self.get_serializer(distribuidor)
-        return Response(serializer.data)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['distribuidor_name', 'distribuidor_id']
 
 
 class ClientViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for Client management
-    - list: Get all clients
-    - create: Create new client
-    - retrieve: Get client details
-    - update: Update client
-    """
-    
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['distribuidor', 'is_active']
-    search_fields = ['name', 'client_id', 'contact_email']
-    
-    @action(detail=True, methods=['post'])
-    def activate(self, request, pk=None):
-        """Activate a client"""
-        client = self.get_object()
-        client.is_active = True
-        client.save()
-        serializer = self.get_serializer(client)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def deactivate(self, request, pk=None):
-        """Deactivate a client"""
-        client = self.get_object()
-        client.is_active = False
-        client.save()
-        serializer = self.get_serializer(client)
-        return Response(serializer.data)
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['client_description', 'client_id']
 
 
 class GroupViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for Group management
-    - list: Get all groups
-    - create: Create new group
-    - retrieve: Get group details
-    - update: Update group
-    """
-    
+    # Usamos select_related para optimizar la consulta al cliente
     queryset = Group.objects.all().select_related('client')
     serializer_class = GroupSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['client', 'is_active']
-    search_fields = ['name', 'group_id', 'client__name']
-    
-    def get_serializer_class(self):
-        """Use different serializers for different actions"""
-        if self.action == 'list':
-            return GroupListSerializer
-        elif self.action == 'retrieve':
-            return GroupSerializer
-        return self.serializer_class
-    
-    @action(detail=True, methods=['post'])
-    def activate(self, request, pk=None):
-        """Activate a group"""
-        group = self.get_object()
-        group.is_active = True
-        group.save()
-        serializer = self.get_serializer(group)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'])
-    def deactivate(self, request, pk=None):
-        """Deactivate a group"""
-        group = self.get_object()
-        group.is_active = False
-        group.save()
-        serializer = self.get_serializer(group)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['get'])
-    def vehicle_count(self, request, pk=None):
-        """Get vehicle count for group"""
-        group = self.get_object()
-        return Response({
-            'group_id': group.id,
-            'vehicle_count': group.vehicle_count
-        })
+    filterset_fields = ['client']
+    search_fields = ['group_description', 'group_id']

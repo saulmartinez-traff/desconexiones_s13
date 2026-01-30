@@ -1,3 +1,5 @@
+# backend/apps/registers/models.py
+
 """
 Registers Models - Gestión de registros de desconexiones y bitácora
 Tablas: Register, Bitacora

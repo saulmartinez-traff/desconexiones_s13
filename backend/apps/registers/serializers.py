@@ -1,171 +1,47 @@
-"""
-Serializers for Registers App
-Handles Register and Bitacora serialization with audit trail
-"""
+# backend/apps/registers/serializers.py
 
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
 from .models import Register, Bitacora
-from apps.vehicles.serializers import VehicleListSerializer
-from apps.organization.serializers import UserSerializer
 
-User = get_user_model()
-
-
+# ============================================================================
+# BITACORA SERIALIZER (¡Este faltaba!)
+# ============================================================================
 class BitacoraSerializer(serializers.ModelSerializer):
-    """Serializer for Bitacora (audit trail) model"""
-    
-    user = UserSerializer(read_only=True)
-    user_id = serializers.PrimaryKeyRelatedField(
-        queryset=User,
-        source='user',
-        write_only=True,
-        required=False,
-        allow_null=True
-    )
-    
+    user = serializers.StringRelatedField() # Para que salga el nombre, no el ID
     class Meta:
         model = Bitacora
-        fields = [
-            'id', 'register', 'user', 'user_id', 'comentario',
-            'created_at'
-        ]
-        read_only_fields = ['id', 'register', 'created_at']
+        fields = '__all__'
 
-
-class RegisterListSerializer(serializers.ModelSerializer):
-    """List Serializer for Register (simplified view)"""
-    
-    vehicle = VehicleListSerializer(read_only=True)
-    
-    class Meta:
-        model = Register
-        fields = [
-            'id', 'vehicle', 'report_date', 'problem', 'type',
-            'last_status', 'updated_at'
-        ]
-        read_only_fields = fields
-
-
-class RegisterDetailSerializer(serializers.ModelSerializer):
-    """Detailed Serializer for Register with audit trail"""
-    
-    vehicle = VehicleListSerializer(read_only=True)
-    vehicle_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('apps.vehicles.models', fromlist=['Vehicle']).Vehicle,
-        source='vehicle',
-        write_only=True,
-        required=True
-    )
-    
-    bitacora = BitacoraSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = Register
-        fields = [
-            'id', 'vehicle', 'vehicle_id', 'report_date',
-            'platform_client', 'distribuidor', 'last_connection',
-            'problem', 'type', 'last_status', 'comentario',
-            'bitacora', 'created_at', 'updated_at'
-        ]
-        read_only_fields = [
-            'id', 'report_date', 'bitacora',
-            'created_at', 'updated_at'
-        ]
-
-
+# ============================================================================
+# REGISTER SERIALIZER (El "Aplanado")
+# ============================================================================
 class RegisterSerializer(serializers.ModelSerializer):
-    """Main Serializer for Register model"""
+    # --- Campos traídos desde Vehículo ---
+    vin = serializers.ReadOnlyField(source='vehicle.vin')
+    vehicle_id = serializers.ReadOnlyField(source='vehicle.vehicle_id')
+    last_connection = serializers.ReadOnlyField(source='vehicle.last_connection')
     
-    vehicle_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('apps.vehicles.models', fromlist=['Vehicle']).Vehicle,
-        source='vehicle',
-        write_only=True,
-        required=True
-    )
+    # --- Campos de Organización (Navegamos las relaciones) ---
+    # Nota: Usamos getattr en la vista o source seguro para evitar errores si es null
+    distribuidor = serializers.ReadOnlyField(source='vehicle.distribuidor.distribuidor_name')
+    cliente = serializers.ReadOnlyField(source='vehicle.group.client.client_description')
     
+    # --- Campo calculado ---
+    contrato = serializers.SerializerMethodField()
+
     class Meta:
         model = Register
         fields = [
-            'id', 'vehicle_id', 'report_date',
-            'platform_client', 'distribuidor', 'last_connection',
-            'problem', 'type', 'last_status', 'comentario',
-            'created_at', 'updated_at'
+            'id', 'report_date', 'vin', 'vehicle_id', 
+            'cliente', 'distribuidor', 'contrato', 
+            'last_connection', 'problem', 
+            'type', 'final_status', 'responsible', 'comment'
         ]
-        read_only_fields = [
-            'id', 'report_date', 'created_at', 'updated_at'
-        ]
-    
-    def create(self, validated_data):
-        """Create register"""
-        register = Register.objects.create(**validated_data)
-        
-        # Log creation to bitacora
-        Bitacora.log_action(
-            register=register,
-            user=self.context['request'].user if 'request' in self.context else None,
-            comentario='Registro creado'
-        )
-        
-        return register
-    
-    def update(self, instance, validated_data):
-        """Update register and log to bitacora"""
-        # Track changes for audit
-        changes = {}
-        for field, value in validated_data.items():
-            old_value = getattr(instance, field.replace('_id', ''), None)
-            if old_value != value:
-                changes[field] = (old_value, value)
-        
-        # Update instance
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        
-        # Log changes to bitacora if there are changes
-        if changes:
-            change_summary = ', '.join([f'{field}: {old} → {new}' for field, (old, new) in changes.items()])
-            Bitacora.log_action(
-                register=instance,
-                user=self.context['request'].user if 'request' in self.context else None,
-                comentario=f'Registro actualizado: {change_summary}'
-            )
-        
-        return instance
 
-
-class RegisterCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating Register"""
-    
-    vehicle_id = serializers.PrimaryKeyRelatedField(
-        queryset=__import__('apps.vehicles.models', fromlist=['Vehicle']).Vehicle,
-        source='vehicle',
-        write_only=True,
-        required=True
-    )
-    
-    class Meta:
-        model = Register
-        fields = [
-            'id', 'vehicle_id', 'report_date',
-            'platform_client', 'distribuidor', 'last_connection',
-            'problem', 'type', 'last_status', 'comentario', 'created_at'
-        ]
-        read_only_fields = [
-            'id', 'report_date', 'created_at'
-        ]
-    
-    def create(self, validated_data):
-        """Create register"""
-        register = Register.objects.create(**validated_data)
-        
-        # Log creation to bitacora
-        Bitacora.log_action(
-            register=register,
-            user=self.context['request'].user if 'request' in self.context else None,
-            comentario='Registro creado'
-        )
-        
-        return register
-
+    def get_contrato(self, obj):
+        # Lógica temporal: si el vehículo tiene contrato, ponemos SÍ
+        # Usamos getattr por seguridad si la relación no existe aún
+        try:
+            return "SÍ" if getattr(obj.vehicle, 'contrato', None) else "NO"
+        except:
+            return "NO"

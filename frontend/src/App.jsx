@@ -1,150 +1,109 @@
-/**
- * App Component - Raíz de la aplicación
- */
+import React, { useContext } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { AuthProvider, AuthContext } from './context/AuthContext';
+import Concentrado from './pages/Concentrado';
+import Resumen from './pages/Resumen';
+import Login from './pages/Login';
 
-import React, { useState } from 'react';
-import { colors, spacing, fonts } from './styles/theme.js';
-import Concentrado from './pages/Concentrado.jsx';
-import Resumen from './pages/Resumen.jsx';
+// Componente para proteger rutas (El "Cadenero")
+const PrivateRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+  if (loading) return <div className="p-10 text-center">Cargando...</div>;
+  return user ? children : <Navigate to="/login" replace />;
+};
 
-const App = () => {
-  const [currentView, setCurrentView] = useState('concentrado');
+// Layout Principal (Header + Contenido + Footer)
+// Solo se muestra cuando ya estás logueado
+const MainLayout = ({ children }) => {
+  const { logout, user } = useContext(AuthContext);
+  const location = useLocation(); // Para saber en qué ruta estamos
+
+  // Función auxiliar para estilos de botones activos
+  const getLinkClass = (path) => {
+    const baseClass = "px-4 py-2 rounded font-semibold transition-colors duration-200 ";
+    return location.pathname === path 
+      ? baseClass + "bg-blue-600 text-white" 
+      : baseClass + "text-white hover:bg-white/10";
+  };
 
   return (
-    <div
-      style={{
-        fontFamily: fonts.bodyFont,
-        backgroundColor: colors.lightGray,
-        minHeight: '100vh',
-      }}
-    >
-      {/* Header Navigation */}
-      <header
-        style={{
-          backgroundColor: colors.darkBlue,
-          color: colors.white,
-          padding: spacing.lg,
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '1400px',
-            margin: '0 auto',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          {/* Logo Placeholder */}
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              backgroundColor: colors.mediumBlue,
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-            }}
-          >
-            S13
+    <div className="min-h-screen flex flex-col bg-gray-100 font-sans">
+      {/* HEADER */}
+      <header className="bg-blue-900 text-white shadow-md p-4">
+        <div className="max-w-[1400px] mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold">
+              S13
+            </div>
+            <h1 className="text-xl font-bold hidden md:block">Desconexiones Vehiculares</h1>
           </div>
 
-          <h1
-            style={{
-              fontSize: '24px',
-              fontFamily: fonts.titleFont,
-              margin: 0,
-            }}
-          >
-            Desconexiones Vehiculares
-          </h1>
-
-          {/* Navigation Links */}
-          <nav style={{ display: 'flex', gap: spacing.lg }}>
-            <button
-              onClick={() => setCurrentView('concentrado')}
-              style={{
-                backgroundColor:
-                  currentView === 'concentrado'
-                    ? colors.mediumBlue
-                    : 'transparent',
-                color: colors.white,
-                border: 'none',
-                padding: `${spacing.sm} ${spacing.md}`,
-                cursor: 'pointer',
-                borderRadius: '4px',
-                fontWeight: 600,
-                transition: 'background-color 0.3s ease',
-              }}
-              onMouseOver={(e) => {
-                if (currentView !== 'concentrado') {
-                  e.target.style.backgroundColor = colors.mediumBlue;
-                  e.target.style.opacity = '0.7';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (currentView !== 'concentrado') {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.opacity = '1';
-                }
-              }}
-            >
+          <nav className="flex items-center gap-2">
+            <Link to="/concentrado" className={getLinkClass('/concentrado')}>
               Concentrado
-            </button>
-            <button
-              onClick={() => setCurrentView('resumen')}
-              style={{
-                backgroundColor:
-                  currentView === 'resumen' ? colors.mediumBlue : 'transparent',
-                color: colors.white,
-                border: 'none',
-                padding: `${spacing.sm} ${spacing.md}`,
-                cursor: 'pointer',
-                borderRadius: '4px',
-                fontWeight: 600,
-                transition: 'background-color 0.3s ease',
-              }}
-              onMouseOver={(e) => {
-                if (currentView !== 'resumen') {
-                  e.target.style.backgroundColor = colors.mediumBlue;
-                  e.target.style.opacity = '0.7';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (currentView !== 'resumen') {
-                  e.target.style.backgroundColor = 'transparent';
-                  e.target.style.opacity = '1';
-                }
-              }}
-            >
+            </Link>
+            <Link to="/resumen" className={getLinkClass('/resumen')}>
               Resumen
+            </Link>
+            <button 
+              onClick={logout}
+              className="ml-4 px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white transition"
+            >
+              Salir ({user?.username})
             </button>
           </nav>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {currentView === 'concentrado' && <Concentrado />}
-        {currentView === 'resumen' && <Resumen />}
+      {/* MAIN CONTENT */}
+      <main className="flex-grow max-w-[1400px] w-full mx-auto p-4">
+        {children}
       </main>
 
-      {/* Footer */}
-      <footer
-        style={{
-          backgroundColor: colors.darkBlue,
-          color: colors.white,
-          textAlign: 'center',
-          padding: spacing.lg,
-          marginTop: spacing.xl,
-        }}
-      >
-        <p>© 2025 S13 Desconexiones. Sistema de Gestión Vehicular.</p>
+      {/* FOOTER */}
+      <footer className="bg-blue-900 text-white text-center p-4 mt-auto">
+        <p className="text-sm">© 2025 S13 Desconexiones. Sistema de Gestión Vehicular.</p>
       </footer>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Ruta Pública: Login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Rutas Protegidas (Envueltas en el Layout) */}
+          <Route 
+            path="/concentrado" 
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Concentrado />
+                </MainLayout>
+              </PrivateRoute>
+            } 
+          />
+
+          <Route 
+            path="/resumen" 
+            element={
+              <PrivateRoute>
+                <MainLayout>
+                  <Resumen />
+                </MainLayout>
+              </PrivateRoute>
+            } 
+          />
+
+          {/* Redirección por defecto */}
+          <Route path="*" element={<Navigate to="/concentrado" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 

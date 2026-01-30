@@ -1,3 +1,5 @@
+# backend/apps/organization/serializers.py
+
 """
 Serializers for Organization App
 Handles User, Distribuidor, Client, and Group serialization
@@ -9,124 +11,50 @@ from .models import Distribuidor, Client, Group
 
 User = get_user_model()
 
-
+# ============================================================================
+# USER SERIALIZER
+# ============================================================================
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for User model"""
+    """Serializer para el usuario personalizado heredado de AbstractUser"""
     
+    # Queremos ver el nombre del distribuidor, no solo el ID
+    distribuidor_name = serializers.ReadOnlyField(source='distribuidor.distribuidor_name')
+
     class Meta:
         model = User
         fields = [
-            'id', 'user_name', 'user_pass', 'user_email',
-            'created_at', 'updated_at'
+            'id', 'username', 'email', 'first_name', 'last_name', 
+            'distribuidor', 'distribuidor_name', 'is_staff', 'role'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-        extra_kwargs = {
-            'user_pass': {'write_only': True},
-        }
-    
-    def create(self, validated_data):
-        """Create user with hashed password"""
-        password = validated_data.pop('user_pass', None)
-        instance = self.Meta.model(**validated_data)
-        if password is not None:
-            instance.set_password(password)
-        instance.save()
-        return instance
-    
-    def update(self, instance, validated_data):
-        """Update user, handling password separately"""
-        password = validated_data.pop('user_pass', None)
-        
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        
-        if password is not None:
-            instance.set_password(password)
-        
-        instance.save()
-        return instance
+        # El password no se debe enviar de vuelta nunca
+        extra_kwargs = {'password': {'write_only': True}}
 
-
+# ============================================================================
+# DISTRIBUIDOR SERIALIZER
+# ============================================================================
 class DistribuidorSerializer(serializers.ModelSerializer):
-    """Serializer for Distribuidor model"""
-    
     class Meta:
         model = Distribuidor
-        fields = [
-            'id', 'distribuidor_id', 'distribuidor_name',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def validate_distribuidor_id(self, value):
-        """Validate distribuidor_id is unique"""
-        if self.instance is None:  # Create operation
-            if Distribuidor.objects.filter(distribuidor_id=value).exists():
-                raise serializers.ValidationError(
-                    "Distribuidor with this ID already exists"
-                )
-        return value
+        fields = '__all__' # Para rápido, ya que son pocos campos
 
-
+# ============================================================================
+# CLIENT & GROUP SERIALIZERS
+# ============================================================================
 class ClientSerializer(serializers.ModelSerializer):
-    """Serializer for Client model"""
-    
     class Meta:
         model = Client
-        fields = [
-            'id', 'client_id', 'client_description',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-    
-    def validate_client_id(self, value):
-        """Validate client_id is unique"""
-        if self.instance is None:  # Create operation
-            if Client.objects.filter(client_id=value).exists():
-                raise serializers.ValidationError(
-                    "Client with this ID already exists"
-                )
-        return value
-
+        fields = '__all__'
 
 class GroupSerializer(serializers.ModelSerializer):
-    """Serializer for Group model"""
-    
+    # Esto es un "Nested Serializer". Cuando pidas un grupo, 
+    # te traerá toda la info del cliente de una vez. ¡Súper útil para React!
     client = ClientSerializer(read_only=True)
     client_id = serializers.PrimaryKeyRelatedField(
-        queryset=Client.objects.all(),
-        source='client',
-        write_only=True,
-        required=True
+        queryset=Client.objects.all(), 
+        source='client', 
+        write_only=True
     )
-    
+
     class Meta:
         model = Group
-        fields = [
-            'id', 'group_id', 'group_description', 'client', 'client_id',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'client', 'created_at', 'updated_at']
-    
-    def validate_group_id(self, value):
-        """Validate group_id is unique"""
-        if self.instance is None:  # Create operation
-            if Group.objects.filter(group_id=value).exists():
-                raise serializers.ValidationError(
-                    "Group with this ID already exists"
-                )
-        return value
-
-
-class GroupListSerializer(serializers.ModelSerializer):
-    """List Serializer for Group (simplified)"""
-    
-    client_description = serializers.CharField(source='client.client_description', read_only=True)
-    
-    class Meta:
-        model = Group
-        fields = [
-            'id', 'group_id', 'group_description', 'client_id',
-            'client_description', 'created_at'
-        ]
-        read_only_fields = fields
+        fields = ['id', 'group_id', 'group_description', 'client', 'client_id']

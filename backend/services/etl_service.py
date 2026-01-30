@@ -32,14 +32,12 @@ class ETLService:
     def __init__(self):
         """Inicializar el servicio con configuración"""
         self.api_url = settings.TELEMETRY_API_URL
-        self.api_key = settings.TELEMETRY_API_KEY
         self.vin_filter = settings.VIN_FILTER_PATTERN
         self.batch_size = settings.ETL_BATCH_SIZE
         self.page_size = settings.ETL_PAGE_SIZE
         self.timeout = settings.ETL_TIMEOUT
         self.session = requests.Session()
         self.session.headers.update({
-            'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
         })
     
@@ -207,8 +205,7 @@ class ETLService:
     
     @transaction.atomic
     def batch_process(self, vehicles: List[Dict], 
-                     geofence_service: 'GeofenceService',
-                     business_rules: 'DisconnectionRules') -> Dict:
+                                          business_rules: 'DisconnectionRules') -> Dict:
         """
         Procesa vehículos en lotes (batch processing).
         
