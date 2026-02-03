@@ -19,7 +19,7 @@ def main():
     try:
         # Ejecutar ETL con límite de 1 página para pruebas
         # Para producción, omite el parámetro o pon un número grande
-        stats = etl.run_etl(max_pages=1)
+        stats = etl.run_etl(max_pages=2)
         
         print("\n=== Resumen del Proceso ===")
         print(f"Registros procesados: {stats['total_records']}")

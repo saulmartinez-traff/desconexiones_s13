@@ -49,7 +49,7 @@ const MainLayout = ({ children }) => {
               onClick={logout}
               className="ml-4 px-3 py-1 text-sm bg-red-600 hover:bg-red-700 rounded text-white transition"
             >
-              Salir ({user?.username})
+              Salir
             </button>
           </nav>
         </div>

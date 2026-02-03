@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import os
 import dotenv
 import requests
+import pandas as pd
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
@@ -149,8 +150,10 @@ class ETLService:
                 logger.error(f"Error al obtener página {page}: {str(e)}")
                 raise ConnectionError(f"Fallo al conectar con API: {str(e)}")
         
+        df = pd.DataFrame(all_records)
+        df = df[~df['group_id'].isin([30201,35761,47365,55617])]
         logger.info(f"Total de registros extraídos: {len(all_records)}")
-        return all_records
+        return df.to_dict('records')
     
     @transaction.atomic
     def _transform_and_load(self, records: List[Dict]) -> Dict:
