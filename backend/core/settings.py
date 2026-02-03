@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'apps.organization',
     'apps.vehicles',
     'apps.registers',
+    'apps.analytics',
     # 'apps.auth',
 ]
 
@@ -297,8 +298,8 @@ VIN_FILTER_PATTERN = 'SZ'
 GEOFENCE_PRECISION = 6  # Decimal places for coordinates
 
 # ETL Settings
-ETL_BATCH_SIZE = 2000
-ETL_PAGE_SIZE = 5000
+ETL_BATCH_SIZE = 1000
+ETL_PAGE_SIZE = 1000
 ETL_TIMEOUT = 300  # seconds
 
 # Security Settings

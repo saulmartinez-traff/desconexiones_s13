@@ -3,7 +3,7 @@
  * Maneja el fetch de registros con paginación y filtros
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import telemetryAPI from '../services/telemetryAPI.js';
 
 export const useFetchRegisters = (page = 1, filters = {}) => {
@@ -16,36 +16,37 @@ export const useFetchRegisters = (page = 1, filters = {}) => {
     totalCount: 0,
   });
 
-  useEffect(() => {
-    const fetchRegisters = async () => {
-      setLoading(true);
-      setError(null);
+  const fetchRegisters = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await telemetryAPI.getRegisters(page, filters);
-        setRegisters(response.data.results || []);
-        setPagination({
-          currentPage: page,
-          totalPages: Math.ceil((response.data.count || 0) / 20),
-          totalCount: response.data.count || 0,
-        });
-      } catch (err) {
-        setError(err.message || 'Error al cargar registros');
-        console.error('Error en useFetchRegisters:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchRegisters();
+    try {
+      const response = await telemetryAPI.getRegisters(page, filters);
+      console.log('API Response:', response.data); // Debug
+      setRegisters(response.data.results || []);
+      setPagination({
+        currentPage: page,
+        totalPages: Math.ceil((response.data.count || 0) / 20),
+        totalCount: response.data.count || 0,
+      });
+    } catch (err) {
+      setError(err.message || 'Error al cargar registros');
+      console.error('Error en useFetchRegisters:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [page, filters]);
+
+  useEffect(() => {
+    fetchRegisters();
+  }, [fetchRegisters]);
 
   return {
     registers,
     loading,
     error,
     pagination,
-    refetch: () => {},
+    refetch: fetchRegisters,
   };
 };
 

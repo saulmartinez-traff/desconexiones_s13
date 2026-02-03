@@ -105,11 +105,6 @@ class Vehicle(models.Model):
         help_text='Número de identificación del vehículo',
         db_index=True
     )
-    inner_id = models.IntegerField(
-        null=True,
-        blank=True,
-        help_text='ID interno del vehículo'
-    )
     
     # Relaciones
     group = models.ForeignKey(

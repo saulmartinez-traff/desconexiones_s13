@@ -26,5 +26,6 @@ urlpatterns = [
     path('api/v1/organization/', include('apps.organization.urls')),
     path('api/v1/vehicles/', include('apps.vehicles.urls')),
     path('api/v1/registers/', include('apps.registers.urls')),
+    path('api/v1/analytics/', include('apps.analytics.urls')),
     # path('api/v1/auth/', include('apps.authentication.urls')),
 ]

@@ -7,18 +7,18 @@ export const colors = {
   darkBlue: '#18325A',      // Dark Blue (Títulos principales)
   mediumBlue: '#3274BA',    // Medium Blue (Elementos interactivos)
   deepTeal: '#1F6589',      // Deep Teal (Acentos)
-  
+
   // Secondary Colors
   lightGray: '#EFF3F6',     // Light Gray (Fondos)
   skyBlue: '#EBF5FA',       // Sky Blue (Fondos alternos)
   black: '#070B0E',         // Black (Texto principal)
-  
+
   // Status Colors
   success: '#10B981',       // Verde (Conectado)
   warning: '#F59E0B',       // Naranja (Advertencia)
   danger: '#EF4444',        // Rojo (Desconectado)
   info: '#3B82F6',          // Azul (Información)
-  
+
   // Neutral
   white: '#FFFFFF',
   gray50: '#F9FAFB',
@@ -53,6 +53,35 @@ export const fontSizes = {
   '2xl': '24px',
   '3xl': '30px',
   '4xl': '36px',
+};
+
+/**
+ * Typography - Combinación de fonts y fontSizes
+ */
+export const typography = {
+  h1: {
+    fontFamily: fonts.titleFont,
+    fontSize: fontSizes['4xl'],
+    fontWeight: 'bold',
+  },
+  h2: {
+    fontFamily: fonts.titleFont,
+    fontSize: fontSizes['3xl'],
+    fontWeight: 'bold',
+  },
+  h3: {
+    fontFamily: fonts.titleFont,
+    fontSize: fontSizes['2xl'],
+    fontWeight: '600',
+  },
+  body: {
+    fontFamily: fonts.bodyFont,
+    fontSize: fontSizes.base,
+  },
+  small: {
+    fontFamily: fonts.bodyFont,
+    fontSize: fontSizes.sm,
+  },
 };
 
 /**
@@ -95,6 +124,7 @@ export const theme = {
   colors,
   fonts,
   fontSizes,
+  typography,
   spacing,
   breakpoints,
   shadows,

@@ -21,6 +21,40 @@ class Register(models.Model):
     Relación 1:N con Bitacora.
     """
     
+    # Choices para campos editables
+    TIPO_MAL_FUNCIONAMIENTO = 'MAL FUNCIONAMIENTO'
+    TIPO_OPERACION = 'OPERACIÓN'
+    TIPO_CHOICES = [
+        (TIPO_MAL_FUNCIONAMIENTO, 'Mal Funcionamiento'),
+        (TIPO_OPERACION, 'Operación'),
+    ]
+    
+    ESTATUS_POSIBLE_MANIPULACION = 'POSIBLE MANIPULACIÓN'
+    ESTATUS_PERDIDA_SEÑAL = 'PERDIDA DE SEÑAL'
+    ESTATUS_TALLER = 'TALLER'
+    ESTATUS_CORTACORRIENTE = 'CORTACORRIENTE'
+    ESTATUS_BASE = 'BASE'
+    ESTATUS_ACCIDENTADA = 'ACCIDENTADA'
+    ESTATUS_CHOICES = [
+        (ESTATUS_POSIBLE_MANIPULACION, 'Posible Manipulación'),
+        (ESTATUS_PERDIDA_SEÑAL, 'Perdida de Señal'),
+        (ESTATUS_TALLER, 'Taller'),
+        (ESTATUS_CORTACORRIENTE, 'Cortacorriente'),
+        (ESTATUS_BASE, 'Base'),
+        (ESTATUS_ACCIDENTADA, 'Accidentada'),
+    ]
+    
+    RESPONSABLE_SIN_ESTATUS_DISTRIBUIDOR = 'SIN ESTATUS DEL DISTRIBUIDOR'
+    RESPONSABLE_SIN_ESTATUS_CLIENTE = 'SIN ESTATUS DEL CLIENTE'
+    RESPONSABLE_NO_OPERACIONAL = 'NO OPERACIONAL'
+    RESPONSABLE_REVISION_FISICA = 'REVISIÓN FÍSICA'
+    RESPONSABLE_CHOICES = [
+        (RESPONSABLE_SIN_ESTATUS_DISTRIBUIDOR, 'Sin Estatus del Distribuidor'),
+        (RESPONSABLE_SIN_ESTATUS_CLIENTE, 'Sin Estatus del Cliente'),
+        (RESPONSABLE_NO_OPERACIONAL, 'No Operacional'),
+        (RESPONSABLE_REVISION_FISICA, 'Revisión Física'),
+    ]
+    
     # Identificador y relación
     vehicle = models.ForeignKey(
         'vehicles.Vehicle',
@@ -71,6 +105,26 @@ class Register(models.Model):
     comentario = models.TextField(
         blank=True,
         help_text='Comentarios adicionales'
+    )
+    
+    # Campos editables por usuario
+    tipo = models.CharField(
+        max_length=50,
+        choices=TIPO_CHOICES,
+        default=TIPO_MAL_FUNCIONAMIENTO,
+        help_text='Tipo de desconexión (editable por usuario)'
+    )
+    estatus_final = models.CharField(
+        max_length=50,
+        choices=ESTATUS_CHOICES,
+        blank=True,
+        help_text='Estatus final del registro (editable por usuario)'
+    )
+    responsable = models.CharField(
+        max_length=50,
+        choices=RESPONSABLE_CHOICES,
+        default=RESPONSABLE_SIN_ESTATUS_DISTRIBUIDOR,
+        help_text='Responsable del seguimiento (editable por usuario)'
     )
     
     # Metadata

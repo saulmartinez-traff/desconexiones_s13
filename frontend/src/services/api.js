@@ -12,7 +12,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
+  timeout: 60000, // 60 segundos para consultas de analytics
 });
 
 /**
@@ -50,5 +50,94 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// ============================================================================
+// API Functions - Registers
+// ============================================================================
+
+/**
+ * Obtener lista de registros con paginación y filtros
+ */
+export const fetchRegisters = async (page = 1, filters = {}) => {
+  const params = {
+    page,
+    page_size: 20,
+    ...filters,
+  };
+
+  const response = await apiClient.get('/registers/', { params });
+  return response.data;
+};
+
+/**
+ * Obtener un registro por ID
+ */
+export const fetchRegisterById = async (id) => {
+  const response = await apiClient.get(`/registers/${id}/`);
+  return response.data;
+};
+
+/**
+ * Actualizar un registro
+ */
+export const updateRegister = async (id, data) => {
+  const response = await apiClient.patch(`/registers/${id}/`, data);
+  return response.data;
+};
+
+/**
+ * Crear un nuevo registro
+ */
+export const createRegister = async (data) => {
+  const response = await apiClient.post('/registers/', data);
+  return response.data;
+};
+
+// ============================================================================
+// API Functions - Vehicles
+// ============================================================================
+
+/**
+ * Obtener lista de vehículos
+ */
+export const fetchVehicles = async (page = 1, filters = {}) => {
+  const params = {
+    page,
+    page_size: 20,
+    ...filters,
+  };
+
+  const response = await apiClient.get('/vehicles/', { params });
+  return response.data;
+};
+
+// ============================================================================
+// API Functions - Auth
+// ============================================================================
+
+/**
+ * Login
+ */
+export const login = async (username, password) => {
+  const response = await apiClient.post('/auth/token/', {
+    username,
+    password,
+  });
+
+  if (response.data.access) {
+    localStorage.setItem('access_token', response.data.access);
+    localStorage.setItem('refresh_token', response.data.refresh);
+  }
+
+  return response.data;
+};
+
+/**
+ * Logout
+ */
+export const logout = () => {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+};
 
 export default apiClient;

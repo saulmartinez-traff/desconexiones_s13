@@ -14,6 +14,7 @@ const VehicleTable = ({
   columns = [],
   editable = false,
   onSave,
+  onRowDoubleClick,
   loading = false,
   error = null,
 }) => {
@@ -42,6 +43,12 @@ const VehicleTable = ({
     }));
   };
 
+  const handleDoubleClick = (row) => {
+    if (onRowDoubleClick) {
+      onRowDoubleClick(row);
+    }
+  };
+
   if (loading) {
     return <p>Cargando...</p>;
   }
@@ -68,14 +75,14 @@ const VehicleTable = ({
           <tr style={{ backgroundColor: colors.darkBlue, color: colors.white }}>
             {columns.map((col) => (
               <th
-                key={col}
+                key={col.accessor || col.header}
                 style={{
                   padding: spacing.md,
                   textAlign: 'left',
                   fontWeight: 600,
                 }}
               >
-                {col}
+                {col.header}
               </th>
             ))}
             {editable && <th style={{ padding: spacing.md }}>Acciones</th>}
@@ -85,29 +92,36 @@ const VehicleTable = ({
           {data.map((row) => (
             <tr
               key={row.id}
+              onDoubleClick={() => handleDoubleClick(row)}
               style={{
                 borderBottom: `1px solid ${colors.gray200}`,
+                cursor: onRowDoubleClick ? 'pointer' : 'default',
               }}
             >
-              {columns.map((col) => (
-                <td
-                  key={`${row.id}-${col}`}
-                  style={{
-                    padding: spacing.md,
-                    borderBottom: `1px solid ${colors.gray200}`,
-                  }}
-                >
-                  {editingId === row.id ? (
-                    <Input
-                      value={editData[col] || ''}
-                      onChange={(e) => handleChange(col, e.target.value)}
-                      style={{ margin: 0 }}
-                    />
-                  ) : (
-                    row[col]
-                  )}
-                </td>
-              ))}
+              {columns.map((col) => {
+                const value = row[col.accessor];
+                const displayValue = col.render ? col.render(value, row) : value;
+
+                return (
+                  <td
+                    key={`${row.id}-${col.accessor}`}
+                    style={{
+                      padding: spacing.md,
+                      borderBottom: `1px solid ${colors.gray200}`,
+                    }}
+                  >
+                    {editingId === row.id && col.editable ? (
+                      <Input
+                        value={editData[col.accessor] || ''}
+                        onChange={(e) => handleChange(col.accessor, e.target.value)}
+                        style={{ margin: 0 }}
+                      />
+                    ) : (
+                      displayValue
+                    )}
+                  </td>
+                );
+              })}
               {editable && (
                 <td
                   style={{

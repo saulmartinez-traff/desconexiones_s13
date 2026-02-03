@@ -1,20 +1,21 @@
 // frontend/src/pages/Concentrado.jsx
 import React, { useState } from 'react';
-import { useFetchRegisters } from '../hooks/useFetchRegisters.js'; // Hook correcto
+import { useFetchRegisters } from '../hooks/useFetchRegisters.js';
 import { useFilters } from '../hooks/useFilters.js';
 import FilterPanel from '../molecules/FilterPanel.jsx';
 import SearchBar from '../molecules/SearchBar.jsx';
 import VehicleTable from '../organisms/VehicleTable.jsx';
+import EditRegisterModal from '../components/EditRegisterModal.jsx';
 import { colors, spacing } from '../styles/theme.js';
+import { updateRegister } from '../services/api.js';
 
 const Concentrado = () => {
   const [page, setPage] = useState(1);
   const { filters, updateFilter, clearFilters } = useFilters({});
-  
-  // === CORRECCIÓN AQUÍ ===
-  // 1. Usamos 'registers' (plural) porque así se llama en tu hook.
-  // 2. Agregamos 'error' para evitar que la página truene al pasarlo abajo.
-  const { registers, loading, error, pagination } = useFetchRegisters(page, filters);
+  const [selectedRegister, setSelectedRegister] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { registers, loading, error, pagination, refetch } = useFetchRegisters(page, filters);
 
   const mockGroups = [
     { id: 1, group_description: 'BAJAS COPPEL' },
@@ -22,19 +23,63 @@ const Concentrado = () => {
     { id: 3, group_description: 'GRUPO FONDO' },
   ];
 
+  // Columnas actualizadas según especificación
   const columns = [
-    { header: 'FECHA REPORTE', accessor: 'report_date' },
+    {
+      header: 'Fecha',
+      accessor: 'created_at',
+      render: (value) => new Date(value).toLocaleDateString('es-MX')
+    },
     { header: 'VIN', accessor: 'vin' },
-    { header: 'CLIENTE', accessor: 'cliente' },
-    { header: 'DISTRIBUIDOR', accessor: 'distribuidor' },
-    { header: 'CONTRATO', accessor: 'contrato' },
-    { header: 'ÚLTIMA CONEXIÓN', accessor: 'last_connection' },
-    { header: 'PROBLEMA', accessor: 'problem' },
-    { header: 'TIPO', accessor: 'type' },
-    { header: 'ESTATUS FINAL', accessor: 'final_status' },
-    { header: 'RESPONSABLE', accessor: 'responsible' },
-    { header: 'COMENTARIO', accessor: 'comment' },
+    { header: 'Cliente', accessor: 'client_description' },
+    {
+      header: 'Distribuidor',
+      accessor: 'distribuidor_name',
+      render: (value) => value || '(Sin asignar)'
+    },
+    {
+      header: 'Contrato',
+      accessor: 'contrato',
+      render: (value) => value || '(Sin asignar)'
+    },
+    {
+      header: 'Última Conexión',
+      accessor: 'last_connection',
+      render: (value) => new Date(value).toLocaleString('es-MX')
+    },
+    { header: 'Problema', accessor: 'problem' },
+    { header: 'Tipo', accessor: 'tipo' },
+    { header: 'Estatus Final', accessor: 'estatus_final' },
+    { header: 'Responsable', accessor: 'responsable' },
+    {
+      header: 'Comentario',
+      accessor: 'comentario',
+      render: (value) => value || '(Sin comentarios)'
+    },
   ];
+
+  const handleRowDoubleClick = (register) => {
+    setSelectedRegister(register);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveRegister = async (updatedRegister) => {
+    try {
+      await updateRegister(updatedRegister.id, {
+        tipo: updatedRegister.tipo,
+        estatus_final: updatedRegister.estatus_final,
+        responsable: updatedRegister.responsable,
+        comentario: updatedRegister.comentario,
+      });
+
+      setIsModalOpen(false);
+      setSelectedRegister(null);
+      refetch(); // Recargar datos
+    } catch (err) {
+      console.error('Error al guardar registro:', err);
+      alert('Error al guardar los cambios');
+    }
+  };
 
   return (
     <div
@@ -44,11 +89,11 @@ const Concentrado = () => {
         minHeight: '100vh',
       }}
     >
-      <h1 style={{ marginBottom: spacing.lg }}>Vista Concentrado</h1>
+      <h1 style={{ marginBottom: spacing.lg }}>Vista Concentrado - Desconexiones</h1>
 
       <SearchBar
         onSearch={(value) => updateFilter('search', value)}
-        placeholder="Buscar por VIN, grupo, etc..."
+        placeholder="Buscar por VIN, cliente, etc..."
       />
 
       <FilterPanel
@@ -62,16 +107,13 @@ const Concentrado = () => {
         onClearFilters={clearFilters}
       />
 
-      {/* === CORRECCIÓN AQUÍ === */}
       <VehicleTable
-        data={registers}  // <--- CAMBIO: Usamos la variable plural
+        data={registers}
         columns={columns}
-        editable={true}
+        editable={false} // La edición se hace por modal
         loading={loading}
-        error={error}     // <--- CAMBIO: Ahora sí existe esta variable
-        onSave={(data) => {
-          console.log('Guardar:', data);
-        }}
+        error={error}
+        onRowDoubleClick={handleRowDoubleClick}
       />
 
       <div
@@ -86,7 +128,47 @@ const Concentrado = () => {
           Página {pagination.currentPage} de {pagination.totalPages} (
           {pagination.totalCount} registros)
         </p>
+
+        <div style={{ display: 'flex', gap: spacing.sm }}>
+          <button
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            style={{
+              padding: `${spacing.sm} ${spacing.md}`,
+              borderRadius: '4px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: page === 1 ? colors.lightGray : colors.white,
+              cursor: page === 1 ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Anterior
+          </button>
+          <button
+            onClick={() => setPage(prev => Math.min(pagination.totalPages, prev + 1))}
+            disabled={page === pagination.totalPages}
+            style={{
+              padding: `${spacing.sm} ${spacing.md}`,
+              borderRadius: '4px',
+              border: `1px solid ${colors.border}`,
+              backgroundColor: page === pagination.totalPages ? colors.lightGray : colors.white,
+              cursor: page === pagination.totalPages ? 'not-allowed' : 'pointer',
+            }}
+          >
+            Siguiente
+          </button>
+        </div>
       </div>
+
+      {isModalOpen && selectedRegister && (
+        <EditRegisterModal
+          register={selectedRegister}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedRegister(null);
+          }}
+          onSave={handleSaveRegister}
+        />
+      )}
     </div>
   );
 };
